@@ -31,11 +31,3 @@
 ## 关于
 ### 版本
 1.2.0.1
-### 作者
-
-![me](https://cdn.jsdelivr.net/gh/Dayanshifu/imagebed@main/img/logo.png)
-
-我的个人主页：https://www.littleyan.tk/
-
-### 下载地址
-https://classes-admin.littleyan.tk
