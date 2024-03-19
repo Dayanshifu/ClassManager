@@ -114,7 +114,7 @@ if cmdmod != 1:
                         ans = box.enterbox('请输入学生姓名', title=title)
                         if str(type(ans)) != "<class 'str'>":
                             box.msgbox('取消', title=title)
-                            continuenm
+                            continue
                         res[ans] = 0
                         res['admin'] = admin
                         f = open('database.txt', 'w')
