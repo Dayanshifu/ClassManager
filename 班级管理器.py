@@ -4,15 +4,17 @@ import time
 import random as ran
 
 cmdmod = 0
-title = 'little颜の班级管理系统 Powered by Python310'
+title = '班级管理'
 
 try:
     import easygui as box
+    from pypinyin import lazy_pinyin  
 except ImportError:
     cmdmod = 1
     op = input('必要的运行库未能导入，是否按“Y”现在开始安装 ')
     if op == 'Y' or op == 'y':
         os.system('pip install easygui')
+        os.system('pip install pypinyin')
         print('运行库安装成功！请重新运行本程序')
     print('必要的运行库未能导入，开启命令行模式，要使用完整的程序，请安装运行库')
     sleep = 3
@@ -75,18 +77,38 @@ if cmdmod != 1:
 
     admin = res['admin']
     res.pop('admin')
-
+    breakful = 0
     while True:
         op = box.buttonbox('选择你要做什么\n'+ str(res), choices=('计分', '随机', '排行榜', '管理', '退出'), title=title)
         if op == '计分':
             lst = []
+            aaa = 0
+            bbb = 1
+            ccc = {}
             for l in res:
+                aaa+=1
                 lst.append(l)
-            tpl = tuple(lst)
-            op = box.buttonbox('选择学生', choices=tpl, title=title)
-            if op == None:
+                print(lst)
+                if aaa >6:
+                    lst.append('下一￷页')
+                    aaa=0
+                    ccc[bbb]=lst
+                    bbb+=1
+                    lst = []
+            
+            lst.append('取消￷')
+            aaa=0
+            ccc[bbb]=lst
+            bbb+=1
+            lst = []
+            for i in ccc:
+                op = box.buttonbox('选择学生', choices=ccc[i], title=title)
+                if op !='下一￷页':
+                    break
+                
+            if op ==None or op == '取消￷':
                 continue
-            mk = box.buttonbox('选择分数', choices=('1','2','3','4','5','-1','-2','-3','-4','-5'), title=title)
+            mk = box.buttonbox('选择分数', choices=('-5','-4','-3','-2','-1','0','1','2','3','4','5'), title=title)
             if mk == None:
                 continue
             res[op] = res[op] + int(mk)
@@ -109,14 +131,18 @@ if cmdmod != 1:
             ans = box.passwordbox('请输入管理员密码', title=title)
             if ans == key:
                 while True:
-                    op = box.buttonbox('选择你要做什么', choices=('添加', '删除', '清空', '重置', '退出'), title=title)
+                    op = box.buttonbox('选择你要做什么', choices=('添加', '删除', '清空', '重置', '排序', '退出'), title=title)
                     if op == '添加':
-                        ans = box.enterbox('请输入学生姓名', title=title)
+                        ans = box.enterbox('请输入学生姓名，输入中文“，”可添加多个', title=title)
                         if str(type(ans)) != "<class 'str'>":
                             box.msgbox('取消', title=title)
                             continue
-                        res[ans] = 0
                         res['admin'] = admin
+                        if '，'in ans:
+                            for i in list(ans.split("，")):
+                                res[i] = 0
+                        else:
+                            res[ans] = 0
                         f = open('database.txt', 'w')
                         res = f.write(str(res))
                         f.close()
@@ -126,15 +152,18 @@ if cmdmod != 1:
                         res.pop('admin')
                         box.msgbox('创建成功！\n'+ str(res), title=title)
                     elif op == '删除':
-                        ans = box.enterbox('请输入要删除学生姓名\n'+ str(res), title=title)
-                        if ans not in res:
-                            box.msgbox('没有找到阿巴阿巴', title=title)
-                            continue
-                        op = box.ynbox('你真舍得删掉ta吗', title=title)
-                        if op != True:
-                            box.msgbox('取消', title=title)
-                            continue
-                        res.pop(ans)
+                        ans = box.enterbox('请输入要删除学生姓名，输入中文“，”可添加多个\n'+ str(res), title=title)
+                        if '，'in ans:
+                            for i in list(ans.split("，")):
+                                if i not in res:
+                                    box.msgbox(f'没有找到{i}', title=title)
+                                    continue
+                                res.pop(i)
+                        else:
+                            if ans not in res:
+                                box.msgbox('没有找到', title=title)
+                                continue
+                            res.pop(ans)
                         res['admin'] = admin
                         f = open('database.txt', 'w')
                         res = f.write(str(res))
@@ -159,6 +188,19 @@ if cmdmod != 1:
                         f.close()
                         res.pop('admin')
                         box.msgbox('清空成功！\n'+ str(res), title=title)
+                    elif op == '排序':
+                        sorted_keys = sorted(res.keys(), key=lambda x: ''.join(lazy_pinyin(x)))  
+                        sorted_data = {k: res[k] for k in sorted_keys}  
+                        res=sorted_data
+                        res['admin'] = admin
+                        f = open('database.txt', 'w')
+                        res = f.write(str(res))
+                        f.close()
+                        f = open('database.txt', 'r')
+                        res = eval(f.read())
+                        f.close()
+                        res.pop('admin')
+                        box.msgbox('排序成功！\n'+ str(res), title=title)
                     elif op == '重置':
                         box.msgbox('删除目录下 database.txt 文件即可（三思而后行）', title=title)
                     else:
@@ -166,8 +208,13 @@ if cmdmod != 1:
             else:
                 box.msgbox('密码错误', title=title)
         elif op == '随机':
-            op = int(box.buttonbox('选择人数', choices=('1','2','3','4','5','6','7','8','9','10'), title=title))
+            op=box.buttonbox('选择人数', choices=('1','2','3','4','5','6','7','8','9','10'), title=title)
+            
+            if op ==None:
+                continue
+            op = int(op)
             lst = []
+            print(op)
             for l in res:
                 lst.append(l)
             if op > len(lst):
@@ -179,7 +226,36 @@ if cmdmod != 1:
             res = eval(f.read())
             f.close()
             res.pop('admin')
-            box.msgbox(sorted(res.items(),  key=lambda d:d[1], reverse=True), title=title)
+            aaaa=sorted(res.items(),  key=lambda d:d[1], reverse=True)
+            output_str=''
+            for index, (key, value) in enumerate(aaaa, start=1):  
+                output_str += f"{index}: {key} {value}||￷|" 
+
+            lstt = list(output_str.split('||￷|'))
+            
+            lst = []
+            aaa = 0
+            bbb = 1
+            ccc = {}
+            for l in lstt:
+                aaa+=1
+                lst.append(l)
+                if aaa >=10:
+                    aaa=0
+                    ccc[bbb]=lst
+                    bbb+=1
+                    lst = []
+                    
+            aaa=0
+            ccc[bbb]=lst
+            bbb+=1
+            lst = []
+            straaa=''
+            for i in ccc:
+                for j in range(0,len(ccc[i])):
+                    straaa+=ccc[i][j]+'\n'
+                box.msgbox(straaa, title=title)
+                straaa=''
             pass
         else:
             exit()
@@ -280,12 +356,16 @@ else:
                 while True:
                     op = input('选择你要做什么\n,添加 0, 删除 1, 清空 2, 重置 3, 退出 4')
                     if op == '0':
-                        ans = input('请输入学生姓名')
+                        ans = input('请输入学生姓名，输入中文“，”可添加多个')
                         if str(type(ans)) != "<class 'str'>":
                             print('取消')
                             continue
-                        res[ans] = 0
                         res['admin'] = admin
+                        if '，'in ans:
+                            for i in list(ans.split("，")):
+                                res[i] = 0
+                        else:
+                            res[ans] = 0
                         f = open('database.txt', 'w')
                         res = f.write(str(res))
                         f.close()
@@ -295,15 +375,18 @@ else:
                         res.pop('admin')
                         print('创建成功！\n'+ str(res))
                     elif op == '1':
-                        ans = input('请输入要删除学生姓名\n'+ str(res))
-                        if ans not in res:
-                            print('没有找到阿巴阿巴')
-                            continue
-                        op = print('你真舍得删掉ta吗按1')
-                        if op != 1:
-                            print('取消')
-                            continue
-                        res.pop(ans)
+                        ans = input('请输入要删除学生姓名，输入中文“，”可添加多个\n'+ str(res))
+                        if '，'in ans:
+                            for i in list(ans.split("，")):
+                                if i not in res:
+                                    box.msgbox(f'没有找到{i}', title=title)
+                                    continue
+                                res.pop(i)
+                        else:
+                            if ans not in res:
+                                box.msgbox('没有找到', title=title)
+                                continue
+                            res.pop(ans)
                         res['admin'] = admin
                         f = open('database.txt', 'w')
                         res = f.write(str(res))
