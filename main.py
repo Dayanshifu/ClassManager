@@ -115,18 +115,19 @@ def renewmain():
 
     readf()
     reslist=list(res.keys())  
+    resscorelist=list(res.values()) 
     b=6
     
     i=0
     if len(res) >6:
         for i in range(len(res)//b):
             for j in range(b):  
-                add_button(frame, i, j, f"{reslist[b*i+j]}:{res[reslist[b*i+j]]}", reslist[b*i+j]) 
+                add_button(frame, i, j, f"{reslist[b*i+j]}:{resscorelist[b*i+j]}", reslist[b*i+j]) 
         for j in range(len(res)-b*(i+1)):
-            add_button(frame, i+1, j, f"{reslist[b*(i+1)+j]}:{res[reslist[(i+1)+j]]}", reslist[b*(i+1)+j]) 
+            add_button(frame, i+1, j, f"{reslist[b*(i+1)+j]}:{resscorelist[b*(i+1)+j]}", reslist[b*(i+1)+j]) 
     else:
         for j in range(len(res)):
-            add_button(frame, 1, j, f"{reslist[j]}:{res[reslist[j]]}", reslist[j]) 
+            add_button(frame, 1, j, f"{reslist[j]}:{resscorelist[j]}", reslist[j]) 
         
 
 
@@ -431,18 +432,18 @@ Label(leftFrame,height=1).pack(side=TOP)
 
 readf()
 reslist=list(res.keys())  
-a=0
+resscorelist=list(res.values())  
 b=6
 i=0
 if len(res) >6:
     for i in range(len(res)//b):
         for j in range(b):  
-            add_button(frame, i, j, f"{reslist[b*i+j]}:{res[reslist[b*i+j]]}", reslist[b*i+j]) 
+            add_button(frame, i, j, f"{reslist[b*i+j]}:{resscorelist[b*i+j]}", reslist[b*i+j]) 
     for j in range(len(res)-b*(i+1)):
-        add_button(frame, i+1, j, f"{reslist[b*(i+1)+j]}:{res[reslist[(i+1)+j]]}", reslist[b*(i+1)+j]) 
+        add_button(frame, i+1, j, f"{reslist[b*(i+1)+j]}:{resscorelist[b*(i+1)+j]}", reslist[b*(i+1)+j]) 
 else:
     for j in range(len(res)):
-        add_button(frame, 1, j, f"{reslist[j]}:{res[reslist[j]]}", reslist[j]) 
+        add_button(frame, 1, j, f"{reslist[j]}:{resscorelist[j]}", reslist[j]) 
 
 main.update_idletasks()  
 on_frame_configure(None, canvas, frame)  
