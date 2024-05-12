@@ -363,8 +363,8 @@ class fx():
                 elif op=='编辑数据文件':
                     if box.ccbox('谨慎编辑',title='编辑数据文件'):
                         fx.createlog('编辑数据文件')
-                        renewmain()
                         os.system(f'notepad {FILEPATH}\\.classdata')
+                        renewmain()
                 else:
                     break
         else:
