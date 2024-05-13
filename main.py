@@ -18,9 +18,6 @@ res={}
 btnlist=btnname=[]
 
 
-process = []
-self_running_process = []
-
 
 def showf():win32api.SetFileAttributes(FILEPATH+'\\.classdata', win32con.FILE_ATTRIBUTE_NORMAL)
 def hidef():win32api.SetFileAttributes(FILEPATH+'\\.classdata', win32con.FILE_ATTRIBUTE_HIDDEN)
