@@ -32,8 +32,8 @@ def readf():
 
 if 1 == 1:
     if os.path.exists(FILEPATH+'\\theprogramisrunning'):
-        print('程序运行中！')
-        exit()
+        if not box.ynbox('已有一个程序正在运行，是否继续？', title='班级管理器 运行向导'):
+            exit()
     else:
         f = open(FILEPATH+'\\theprogramisrunning', 'w')
         res = f.write('')
