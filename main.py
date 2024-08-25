@@ -294,13 +294,13 @@ class fx():
             while 1:
                 op = box.choicebox('选择你要做什么', choices=('添加', '批量添加', '删除', '清空表现', '排序', '编辑数据文件', '退出'), title='班级管理器 管理设置')
                 if op == '添加':
-                    ans = box.enterbox('请输入学生姓名，输入中文“，”可添加多个', title='班级管理器 管理设置 添加学生')
+                    ans = box.enterbox('请输入学生姓名，输入英文","可添加多个', title='班级管理器 管理设置 添加学生')
                     if str(type(ans)) != "<class 'str'>":
                         box.msgbox('取消', title='班级管理器 管理设置')
                         continue
                     res['admin'] = admin
-                    if '，'in ans:
-                        for i in list(ans.split("，")):
+                    if ','in ans:
+                        for i in list(ans.split(",")):
                             res[i] = 0
                     else:
                         res[ans] = 0
@@ -317,13 +317,13 @@ class fx():
                     fx.createlog(f'增加学生：{ans}')
                     renewmain()
                 elif op == '删除':
-                    ans = box.enterbox('请输入要删除学生姓名，输入中文“，”可添加多个\n'+ str(res), title='班级管理器 管理设置 删除学生')
+                    ans = box.enterbox('请输入要删除学生姓名，输入英文","可添加多个\n'+ str(res), title='班级管理器 管理设置 删除学生')
                     dlst=[]
                     if str(type(ans)) != "<class 'str'>":
                         box.msgbox('取消', title='班级管理器 管理设置')
                         continue
-                    if '，'in ans:
-                        for i in list(ans.split("，")):
+                    if ','in ans:
+                        for i in list(ans.split(",")):
                             if i not in res:
                                 box.msgbox(f'没有找到{i}', title='班级管理器 管理设置 删除学生')
                                 continue
@@ -428,7 +428,6 @@ icon = open("gui_icon.ico", "wb+")
 icon.write(base64.b64decode(img))  # 写入到临时文件中
 icon.close()
 main.iconbitmap("gui_icon.ico")
-os.remove("gui_icon.ico")
 main.resizable( 0, 0) 
 main.geometry('1024x600')
 main.attributes('-alpha','0.9')
