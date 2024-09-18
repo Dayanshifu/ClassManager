@@ -30,5 +30,16 @@ def screenshot():
         f.write(f'{time.asctime()} {f"Screenshot saved to {img_path}"}\n\n{time.asctime()} 创建日志')
         f.close()
     return(img_path)
-a=screenshot()
+
+def screenshot1():
+    desktop = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop')  
+    screenshots_folder = os.path.join(desktop, 'Screenshots') 
+    if not os.path.exists(screenshots_folder):  
+        os.makedirs(screenshots_folder) 
+    img1 = ImageGrab.grab()  
+    a=f'screenshot_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}.png'
+    img_path = os.path.join(screenshots_folder, a)  
+    img1.save(img_path) 
+    return(img_path)
+a=screenshot1()
 os.remove(a)
