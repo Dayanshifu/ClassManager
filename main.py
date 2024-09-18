@@ -58,8 +58,10 @@ def mute_sound():
 
     if volume.GetMute():
         volume.SetMute(0, None)
+        mute_button.configure(text='静音')
     else:
         volume.SetMute(1, None)
+        mute_button.configure(text='解除')
     pass  
 
 def screendraw():
