@@ -8,7 +8,7 @@ import time, Pmw, base64
 import random as ran
 from pypinyin import lazy_pinyin  
 import easygui as box
-import screenshots
+import screenshots,subprocess
 from datetime import datetime  
 from PIL import ImageGrab  
 import time  
@@ -16,7 +16,6 @@ import time
 from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
 from ctypes import cast, POINTER
 from comtypes import CLSCTX_ALL
-
 
 devices = AudioUtilities.GetSpeakers()
 interface = devices.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
@@ -28,6 +27,8 @@ screenshotstatus=0
 
 FILEPATH = os.path.dirname(os.path.realpath(sys.argv[0]))
 FILEINPATH = os.path.dirname(__file__)
+
+drawboard=FILEPATH+'\\DesktopAnnotation\\DesktopAnnotation.exe'
 admin=''
 res={}
 btnlist=btnname=[]
@@ -68,7 +69,7 @@ def screendraw():
     global screenshotstatus,miniwin
     screenshotstatus=1
     miniwin.attributes('-alpha','0')
-    os.system(FILEPATH+'\\DesktopAnnotation\\DesktopAnnotation.exe')
+    subprocess.run([drawboard], shell=False, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     miniwin.attributes('-alpha','0.8')
     screenshotstatus=0  
     return 
