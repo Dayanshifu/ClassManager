@@ -69,7 +69,8 @@ def screendraw():
     global screenshotstatus,miniwin
     screenshotstatus=1
     miniwin.attributes('-alpha','0')
-    subprocess.run([drawboard], shell=False, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    aaa=threading.Thread(target=subprocess.run([drawboard], shell=False, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE))
+    aaa.start()
     miniwin.attributes('-alpha','0.8')
     screenshotstatus=0  
     return 
