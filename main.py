@@ -64,15 +64,25 @@ def mute_sound():
         volume.SetMute(1, None)
         mute_button.configure(text='解除')
     pass  
+def showtool():  
+    global toolstate,toolframe,miniwin
+    if toolstate==1:
+        hidebtn.configure(text='显示',width=8)
+        toolframe.pack_forget()
+        miniwin.attributes('-alpha','0.6')
+        toolstate=0
+    else:
+        hidebtn.configure(text='隐藏',width=4)
+        toolframe.pack(side=LEFT)
+        miniwin.attributes('-alpha','0.8')
+        toolstate=1
+    pass  
 
 def screendraw():
     global screenshotstatus,miniwin
-    screenshotstatus=1
-    miniwin.attributes('-alpha','0')
-    aaa=threading.Thread(target=subprocess.run([drawboard], shell=False, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE))
-    aaa.start()
-    miniwin.attributes('-alpha','0.8')
-    screenshotstatus=0  
+    #aaa=threading.Thread(target=subprocess.run([drawboard], shell=False, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE))
+    #aaa.start() 
+    subprocess.run([drawboard], shell=False, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     return 
 
 
@@ -520,7 +530,7 @@ class fx():
 
 
 def miniman():
-    global miniwin,volume_scale,mute_button,screenshot_button,randomstudent_button,screenshotstatus,main
+    global miniwin,volume_scale,mute_button,screenshot_button,randomstudent_button,toolframe,hidebtn,screenshotstatus,main,toolstate
     if os.path.exists(FILEPATH+'\\theisrunning'):
         if not box.ynbox('已有一个程序正在运行，是否继续？', title='双师授课助手 运行向导'):
             return()
@@ -530,6 +540,7 @@ def miniman():
         f.close()
         win32api.SetFileAttributes(FILEPATH+'\\theisrunning', win32con.FILE_ATTRIBUTE_HIDDEN)
     fx.createlog(f"打开双师授课助手")
+    toolstate=1
     miniwin = Toplevel()
     miniwin.attributes("-toolwindow", 2)
     miniwin.attributes('-topmost', 'true')
@@ -547,24 +558,35 @@ def miniman():
             main.attributes('-alpha','0.9')
     miniwin.protocol("WM_DELETE_WINDOW", destroy_miniwin)  
     
-    mute_button             = ttk.Button(miniwin,  width=4,text="静音",             style='C.TButton', command=mute_sound)  
+    ttk.Label(miniwin,text="\n",font=('微软雅黑',8)).pack(side=LEFT)
+    hidebtn = ttk.Button(miniwin,  width=4,text="隐藏",style='C.TButton',command=showtool)  
+    hidebtn.pack(side=LEFT)  
+
+    toolframe=ttk.Frame(miniwin)
+    toolframe.pack(side=LEFT)
+
+    mute_button= ttk.Button(toolframe,width=4,text="静音",style='C.TButton', command=mute_sound)  
+    if volume.GetMute():
+        mute_button.configure(text='解除')
+    else:
+        mute_button.configure(text='静音')
     mute_button.pack(side=LEFT)  
     
-    screenshot_button       = ttk.Button(miniwin,  width=4,text="截图",    style='C.TButton', command=screenshot)  
+    screenshot_button= ttk.Button(toolframe,width=4,text="截图",style='C.TButton', command=screenshot)  
     screenshot_button.pack(side=LEFT)  
 
-    randomstudent_button    = ttk.Button(miniwin,  width=4,text="抽奖",         style='C.TButton', command=randomstudent)  
+    randomstudent_button= ttk.Button(toolframe,width=4,text="抽奖",style='C.TButton', command=randomstudent)  
     randomstudent_button.pack(side=LEFT) 
 
-    drawbtn    = ttk.Button(miniwin,  width=4,text="批注",         style='C.TButton', command=screendraw)  
+    drawbtn= ttk.Button(toolframe,  width=4,text="批注",style='C.TButton', command=screendraw)  
     drawbtn.pack(side=LEFT) 
     
-    Label(miniwin,text="音量\n调整").pack(side=LEFT)
-    volume_scale = Scale(miniwin, from_=0, to=100, length=100,orient='horizontal', command=adjust_volume)  
+    ttk.Label(toolframe,text="音量\n调整",font=('微软雅黑',8)).pack(side=LEFT)
+    volume_scale = ttk.Scale(toolframe, from_=0, to=100, length=80,orient='horizontal',command=adjust_volume)  
     volume_scale.pack(side=LEFT)  
     volume_scale.set(get_volume_percent(get_master_volume_controller())) 
-
-    #closebtn    = ttk.Button(miniwin,  width=4,text="关闭",         style='C.TButton', command=destroy_miniwin)  
+    
+    #closebtn= ttk.Button(toolframe,width=4,text="关闭",style='C.TButton', command=destroy_miniwin)  
     #closebtn.pack(side=LEFT) 
     main.attributes('-alpha','0')
 
@@ -587,7 +609,7 @@ ppm3_tips = Pmw.Balloon(main)
 s1=s2=ttk.Style()
 s1.configure('A.TButton',font=('微软雅黑',16))
 s2.configure('B.TButton',font=('微软雅黑',18))
-s2.configure('C.TButton',font=('微软雅黑',14))
+s2.configure('C.TButton',font=('微软雅黑',12))
 
 leftFrame = ttk.Frame(main)
 bottomFrame = ttk.Frame(leftFrame)
