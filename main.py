@@ -11,7 +11,7 @@ import easygui as box
 import screenshots, subprocess
 from datetime import datetime
 from PIL import ImageGrab
-import time,geticon
+import time, geticon
 
 from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
 from ctypes import cast, POINTER
@@ -86,15 +86,14 @@ def showtool():
 
 def screendraw():
     global screenshotstatus, miniwin
+    miniwin.attributes("-alpha", "0")
     # aaa=threading.Thread(target=subprocess.run([drawboard], shell=False, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE))
     # aaa.start()
-    subprocess.run(
-        [drawboard],
-        shell=False,
-        check=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
+    try:
+        subprocess.Popen(drawboard)
+        time.sleep(0.6)
+    except:pass
+    miniwin.attributes("-alpha", "0.8")
     return
 
 
@@ -727,7 +726,8 @@ def miniman():
     drawbtn = ttk.Button(
         toolframe, width=4, text="批注", style="C.TButton", command=screendraw
     )
-    drawbtn.pack(side=LEFT)
+    if os.path.exists(drawboard):
+        drawbtn.pack(side=LEFT)
 
     ttk.Label(toolframe, text="音量\n调整", font=("微软雅黑", 8)).pack(side=LEFT)
     volume_scale = ttk.Scale(
@@ -746,6 +746,7 @@ def miniman():
     main.attributes("-alpha", "0")
 
     miniwin.mainloop()
+
 
 main = Tk()
 main.title("班级管理器")
