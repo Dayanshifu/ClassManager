@@ -21,7 +21,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='班级管理器',
+    name='ClassManager',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
