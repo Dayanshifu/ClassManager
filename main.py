@@ -11,7 +11,7 @@ import easygui as box
 import screenshots, subprocess
 from datetime import datetime
 from PIL import ImageGrab
-import time, geticon
+import time, geticon, math
 
 from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
 from ctypes import cast, POINTER
@@ -63,9 +63,17 @@ def mute_sound():
     if volume.GetMute():
         volume.SetMute(0, None)
         mute_button.configure(text="静音")
+        aaaaa=miniwin.title()
+        miniwin.title("已解除静音")
+        time.sleep(1)
+        miniwin.title(aaaaa)
     else:
         volume.SetMute(1, None)
         mute_button.configure(text="解除")
+        aaaaa=miniwin.title()
+        miniwin.title("已静音")
+        time.sleep(1)
+        miniwin.title(aaaaa)
     pass
 
 
@@ -75,6 +83,7 @@ def showtool():
         hidebtn.configure(text="显示", width=8)
         toolframe.pack_forget()
         miniwin.attributes("-alpha", "0.6")
+        miniwin.title("")
         toolstate = 0
     else:
         hidebtn.configure(text="隐藏", width=4)
@@ -104,8 +113,12 @@ def screenshot():
     thread = threading.Thread(target=screenshots.screenshot())
     thread.start()
     time.sleep(0.5)
+    aaaaa=miniwin.title()
+    miniwin.title(f"已保存至桌面")
     miniwin.attributes("-alpha", "0.8")
     screenshotstatus = 0
+    time.sleep(1)
+    miniwin.title(aaaaa)
     return
 
 
@@ -140,6 +153,7 @@ def randomstudent():
         c += i + "\n"
     setTxt(c)
     fx.createlog(f"进行抽奖，抽奖人数：{len(b)}，抽奖内容：{b}")
+    miniwin.title(b)
     box.msgbox(c, title="抽奖结果")
 
 
@@ -676,9 +690,9 @@ def miniman():
     fx.createlog(f"打开双师授课助手")
     toolstate = 1
     miniwin = Toplevel()
-    miniwin.attributes("-toolwindow", 2)
+    miniwin.attributes("-toolwindow", 1)
     miniwin.attributes("-topmost", "true")
-    miniwin.title("双师授课助手")
+    miniwin.title("")
     miniwin.resizable(0, 0)
     miniwin.attributes("-alpha", "0.8")
     # miniwin.overrideredirect(True)
@@ -729,22 +743,25 @@ def miniman():
     if os.path.exists(drawboard):
         drawbtn.pack(side=LEFT)
 
-    ttk.Label(toolframe, text="音量\n调整", font=("微软雅黑", 8)).pack(side=LEFT)
+    ttk.Label(toolframe, text="音量\n调整", font=("微软雅黑", 6)).pack(side=LEFT)
+    ttk.Label(toolframe, text="-", font=("微软雅黑", 10)).pack(side=LEFT)
     volume_scale = ttk.Scale(
         toolframe,
         from_=0,
         to=100,
-        length=80,
+        length=70,
         orient="horizontal",
         command=adjust_volume,
     )
     volume_scale.pack(side=LEFT)
     volume_scale.set(get_volume_percent(get_master_volume_controller()))
+    ttk.Label(toolframe, text="+", font=("微软雅黑", 10)).pack(side=LEFT)
 
     # closebtn= ttk.Button(toolframe,width=4,text="关闭",style='C.TButton', command=destroy_miniwin)
     # closebtn.pack(side=LEFT)
     main.attributes("-alpha", "0")
 
+    miniwin.title("")
     miniwin.mainloop()
 
 
@@ -764,7 +781,7 @@ ppm3_tips = Pmw.Balloon(main)
 s1 = s2 = ttk.Style()
 s1.configure("A.TButton", font=("微软雅黑", 16))
 s2.configure("B.TButton", font=("微软雅黑", 18))
-s2.configure("C.TButton", font=("微软雅黑", 12))
+s2.configure("C.TButton", font=("微软雅黑", 9))
 
 leftFrame = ttk.Frame(main)
 bottomFrame = ttk.Frame(leftFrame)
