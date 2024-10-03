@@ -62,11 +62,24 @@ def set_volume_percent(volume_controller, percent):
     volume_controller.SetMasterVolumeLevelScalar(volume, None)
 
 def showvolumepercent(): 
-    global scaleispressed,volume_scale,miniwin
+    global scaleispressed,volume_scale,miniwin,mute_button
     if scaleispressed==0:
         try:volume_scale.set(get_volume_percent(get_master_volume_controller()))
         except:pass
-    miniwin.after(100, showvolumepercent) 
+    if get_volume_percent(get_master_volume_controller())==0:
+        try:
+            set_volume_percent(get_master_volume_controller(), volume_scale.get())
+            mute_button.configure(text="解除",style="CRED.TButton")
+        except:pass
+    elif volume.GetMute():
+        try:
+            mute_button.configure(text="解除",style="CRED.TButton")
+        except:pass
+    else:
+        try:
+            mute_button.configure(text="静音",style="C.TButton")
+        except:pass
+    miniwin.after(200, showvolumepercent) 
          
 
 def adjust_volume(e):

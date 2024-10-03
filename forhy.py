@@ -1,6 +1,7 @@
 from tkinter import *
 from tkinter import ttk
 from tkinter import scrolledtext
+import tkinter
 import os, sys, threading
 from sys import *
 import win32con, win32api, win32gui, win32process  # pywin32
@@ -12,7 +13,7 @@ import screenshotshy as screenshots
 import subprocess
 from datetime import datetime
 from PIL import ImageGrab
-import time, geticon, math
+import time, geticon,ctypes
 
 from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
 from ctypes import cast, POINTER
@@ -23,8 +24,13 @@ interface = devices.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
 volume = cast(interface, POINTER(IAudioEndpointVolume))
 vl = volume.GetMasterVolumeLevel()
 vr = volume.GetVolumeRange()
+
 screenshotstatus = 0
 
+ctypes.windll.shcore.SetProcessDpiAwareness(1)
+ScaleFactor=ctypes.windll.shcore.GetScaleFactorForDevice(0)
+
+scaleispressed=0
 
 FILEPATH = os.path.dirname(os.path.realpath(sys.argv[0]))
 FILEINPATH = os.path.dirname(__file__)
@@ -34,6 +40,10 @@ admin = ""
 res = {}
 btnlist = btnname = []
 
+user32 = ctypes.windll.user32
+user32.SetProcessDPIAware()
+scaling_factor = user32.GetDpiForSystem()
+wp= scaling_factor / 96.0
 
 def get_master_volume_controller():
     devices = AudioUtilities.GetSpeakers()
@@ -52,39 +62,60 @@ def set_volume_percent(volume_controller, percent):
     volume = percent / 100.0
     volume_controller.SetMasterVolumeLevelScalar(volume, None)
 
+def showvolumepercent(): 
+    global scaleispressed,volume_scale,miniwin,mute_button
+    if scaleispressed==0:
+        try:volume_scale.set(get_volume_percent(get_master_volume_controller()))
+        except:pass
+    if get_volume_percent(get_master_volume_controller())==0:
+        try:
+            set_volume_percent(get_master_volume_controller(), volume_scale.get())
+            mute_button.configure(text="解除",style="CRED.TButton")
+        except:pass
+    elif volume.GetMute():
+        try:
+            mute_button.configure(text="解除",style="CRED.TButton")
+        except:pass
+    else:
+        try:
+            mute_button.configure(text="静音",style="C.TButton")
+        except:pass
+    miniwin.after(200, showvolumepercent) 
+         
 
 def adjust_volume(e):
+    global sssl,miniwin
     # volume.SetMasterVolumeLevel(
     # vr[0]+ int(volume_scale.get())*(vr[1]-vr[0])/100, None)
     set_volume_percent(get_master_volume_controller(), volume_scale.get())
+    if int(volume_scale.get()) < 10:a=f'    {int(volume_scale.get())}'
+    elif int(volume_scale.get())<100:a=f'  {int(volume_scale.get())}'
+    else:a=int(volume_scale.get())
+    sssl.configure(text=f"音量\n{a}",font=("微软雅黑", 6))
     pass
 
 
 def mute_sound():
-    if volume.GetMute():
+    if get_volume_percent(get_master_volume_controller())==0:
+        volume_scale.set(30)
+        set_volume_percent(get_master_volume_controller(), volume_scale.get())
         volume.SetMute(0, None)
-        mute_button.configure(text="静音")
-        aaaaa=miniwin.title()
-        miniwin.title("已解除静音")
-        time.sleep(1)
-        miniwin.title(aaaaa)
+        mute_button.configure(text="静音",style="C.TButton")
+    elif volume.GetMute():
+        volume.SetMute(0, None)
+        mute_button.configure(text="静音",style="C.TButton")
     else:
         volume.SetMute(1, None)
-        mute_button.configure(text="解除")
-        aaaaa=miniwin.title()
-        miniwin.title("已静音")
-        time.sleep(1)
-        miniwin.title(aaaaa)
+        mute_button.configure(text="解除",style="CRED.TButton")
     pass
 
 
 def showtool():
     global toolstate, toolframe, miniwin
     if toolstate == 1:
-        hidebtn.configure(text="显示", width=8)
+        hidebtn.configure(text="显示", width=6)
         toolframe.pack_forget()
         miniwin.attributes("-alpha", "0.6")
-        miniwin.title("")
         toolstate = 0
     else:
         hidebtn.configure(text="隐藏", width=4)
@@ -114,12 +145,8 @@ def screenshot():
     thread = threading.Thread(target=screenshots.screenshot())
     thread.start()
     time.sleep(0.5)
-    aaaaa=miniwin.title()
-    miniwin.title(f"已保存至Screenshots")
     miniwin.attributes("-alpha", "0.8")
     screenshotstatus = 0
-    time.sleep(1)
-    miniwin.title(aaaaa)
     return
 
 
@@ -673,8 +700,21 @@ class fx:
             return ()
 
 
+#def on_scale_press(event):  
+#    global scaleispressed
+#    scaleispressed = 1  
+#
+#
+#def on_scale_release(event):   
+#    global scaleispressed, volume_scale,mute_button,volume
+#    scaleispressed = 0
+#    if volume.GetMute():
+#        mute_button.configure(text="解除",style='CRED.TButton')
+#    else:
+#        mute_button.configure(text="静音",style='C1.TButton')
+
 def miniman():
-    global miniwin, volume_scale, mute_button, screenshot_button, randomstudent_button, toolframe, hidebtn, screenshotstatus, main, toolstate
+    global miniwin, volume_scale, mute_button, sssl,screenshot_button, randomstudent_button, toolframe, hidebtn, screenshotstatus, main, toolstate
     if os.path.exists(FILEPATH + "\\theisrunning"):
         if not box.ynbox(
             "已有一个程序正在运行，是否继续？", title="双师授课助手 运行向导"
@@ -690,7 +730,7 @@ def miniman():
     fx.createlog(f"打开双师授课助手")
     toolstate = 1
     miniwin = Toplevel()
-    miniwin.attributes("-toolwindow", 1)
+    miniwin.attributes("-toolwindow", 2)
     miniwin.attributes("-topmost", "true")
     miniwin.title("")
     miniwin.resizable(0, 0)
@@ -708,8 +748,6 @@ def miniman():
             main.attributes("-alpha", "0.9")
 
     miniwin.protocol("WM_DELETE_WINDOW", destroy_miniwin)
-
-    #ttk.Label(miniwin, text="\n", font=("微软雅黑", 8)).pack(side=LEFT)
     #hidebtn = ttk.Button(
     #    miniwin, width=4, text="隐藏", style="C.TButton", command=showtool
     #)
@@ -722,11 +760,11 @@ def miniman():
     #    toolframe, width=4, text="静音", style="C.TButton", command=mute_sound
     #)
     #if volume.GetMute():
-    #    mute_button.configure(text="解除")
+    #    mute_button.configure(text="解除",style='CRED.TButton')
     #else:
-    #    mute_button.configure(text="静音")
+    #    mute_button.configure(text="静音",style='C1.TButton')
     #mute_button.pack(side=LEFT)
-#
+
     screenshot_button = ttk.Button(
         toolframe, width=4, text="截图", style="C.TButton", command=screenshot
     )
@@ -742,30 +780,36 @@ def miniman():
     #)
     #if os.path.exists(drawboard):
     #    drawbtn.pack(side=LEFT)
-
-    #ttk.Label(toolframe, text="音量\n调整", font=("微软雅黑", 6)).pack(side=LEFT)
+#
+    #sssl=ttk.Label(toolframe, text="音量\n调整", font=("微软雅黑", 4))
+    #sssl.pack(side=LEFT)
     #ttk.Label(toolframe, text="-", font=("微软雅黑", 10)).pack(side=LEFT)
     #volume_scale = ttk.Scale(
     #    toolframe,
     #    from_=0,
     #    to=100,
-    #    length=70,
+    #    length=int(round(67*wp,0)),
     #    orient="horizontal",
     #    command=adjust_volume,
     #)
     #volume_scale.pack(side=LEFT)
     #volume_scale.set(get_volume_percent(get_master_volume_controller()))
     #ttk.Label(toolframe, text="+", font=("微软雅黑", 10)).pack(side=LEFT)
+    #volume_scale.bind("<ButtonPress-1>", on_scale_press)  
+    #volume_scale.bind("<ButtonRelease-1>", on_scale_release)  
 
     # closebtn= ttk.Button(toolframe,width=4,text="关闭",style='C.TButton', command=destroy_miniwin)
     # closebtn.pack(side=LEFT)
     main.attributes("-alpha", "0")
 
-    miniwin.title("")
+    miniwin.after(0, showvolumepercent) 
     miniwin.mainloop()
 
 
 main = Tk()
+
+main.tk.call('tk', 'scaling', ScaleFactor/80)
+
 main.title("班级管理器")
 icon = open("gui_icon.ico", "wb+")
 icon.write(base64.b64decode(geticon.img))
@@ -773,7 +817,7 @@ icon.close()
 main.iconbitmap("gui_icon.ico")
 os.remove("gui_icon.ico")
 main.resizable(0, 0)
-main.geometry("790x460")
+main.geometry(f"{int(802*wp)}x{int(444*wp)}")
 main.attributes("-alpha", "0.9")
 
 ppm3_tips = Pmw.Balloon(main)
@@ -781,7 +825,8 @@ ppm3_tips = Pmw.Balloon(main)
 s1 = s2 = ttk.Style()
 s1.configure("A.TButton", font=("微软雅黑", 12))
 s2.configure("B.TButton", font=("微软雅黑", 13))
-s2.configure("C.TButton", font=("微软雅黑", 9))
+s2.configure("C.TButton", font=("微软雅黑", 9),foreground='black')
+s2.configure("CRED.TButton", font=("微软雅黑", 9),foreground='red')
 
 leftFrame = ttk.Frame(main)
 bottomFrame = ttk.Frame(leftFrame)
@@ -789,10 +834,9 @@ bottomFrame = ttk.Frame(leftFrame)
 
 canvasframe = ttk.Frame(leftFrame)
 canvas = Canvas(canvasframe, borderwidth=0)
-canvas.config(width=854)
 frame = ttk.Frame(canvas)
 vsb = ttk.Scrollbar(canvasframe, orient="vertical", command=canvas.yview)
-canvas.configure(yscrollcommand=vsb.set)
+canvas.configure(yscrollcommand=vsb.set,width=6*80*6)
 frame_window = canvas.create_window((0, 0), window=frame, anchor="nw")
 
 vsb.pack(side=RIGHT, fill=Y)
@@ -838,13 +882,13 @@ btn2.pack(side=LEFT)
 btn3.pack(side=LEFT)
 btn4.pack(side=LEFT)
 btn5.pack(side=LEFT)
-txtAr.pack(side=RIGHT, expand=True, fill=Y)
+txtAr.pack(side=RIGHT, fill=BOTH)
 
 leftFrame.pack(side=LEFT, expand=True, fill=BOTH)
-canvasframe.pack(side=TOP, expand=True, fill=BOTH)
-Label(leftFrame, height=1).pack(side=TOP)
-bottomFrame.pack(side=TOP)
-Label(leftFrame).pack(side=TOP)
+Label(leftFrame, height=1).pack(side=BOTTOM)
+bottomFrame.pack(side=BOTTOM)
+Label(leftFrame, height=1).pack(side=BOTTOM)
+canvasframe.pack(side=BOTTOM, expand=True, fill=BOTH)
 
 readf()
 reslist = list(res.keys())
