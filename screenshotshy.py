@@ -8,7 +8,8 @@ import time  ,datetime
 FILEPATH = os.path.dirname(os.path.realpath(sys.argv[0]))
 FILEINPATH = os.path.dirname(__file__)
 
-def screenshot(a=f'screenshot_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}.png'):
+def screenshot(a=''):
+    if a=='':a=f'screenshot_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}.png'
     screenshots_folder = os.path.join(FILEPATH, 'Screenshots') 
     if not os.path.exists(screenshots_folder):  
         os.makedirs(screenshots_folder) 

@@ -8,7 +8,9 @@ import time  ,datetime
 FILEPATH = os.path.dirname(os.path.realpath(sys.argv[0]))
 FILEINPATH = os.path.dirname(__file__)
 
-def screenshot(a=f'screenshot_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}.png'):
+def screenshot(a=''):
+    if a=='':
+        a=f'screenshot_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}.png'
     desktop = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop')  
     screenshots_folder = os.path.join(desktop, 'Screenshots') 
     if not os.path.exists(screenshots_folder):  
@@ -40,5 +42,5 @@ def screenshot1():
     img_path = os.path.join(screenshots_folder, a)  
     img1.save(img_path) 
     return(img_path)
-a=screenshot1()
-os.remove(a)
+c=screenshot1()
+os.remove(c)

@@ -206,6 +206,7 @@ def readf():
 
 
 if 1 == 1:
+    
     if os.path.exists(FILEPATH + "\\theprogramisrunning") or os.path.exists(
         FILEPATH + "\\theisrunning"
     ):
@@ -714,7 +715,7 @@ def on_scale_release(event):
 
 def miniman():
     global miniwin, volume_scale, mute_button, sssl,screenshot_button, randomstudent_button, toolframe, hidebtn, screenshotstatus, main, toolstate
-    if os.path.exists(FILEPATH + "\\theisrunning"):
+    '''if os.path.exists(FILEPATH + "\\theisrunning"):
         if not box.ynbox(
             "已有一个程序正在运行，是否继续？", title="双师授课助手 运行向导"
         ):
@@ -725,7 +726,7 @@ def miniman():
         f.close()
         win32api.SetFileAttributes(
             FILEPATH + "\\theisrunning", win32con.FILE_ATTRIBUTE_HIDDEN
-        )
+        )'''
     fx.createlog(f"打开双师授课助手")
     toolstate = 1
     miniwin = Toplevel()
