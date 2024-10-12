@@ -7,12 +7,14 @@ from sys import *
 import win32con, win32api, win32gui, win32process  # pywin32
 import time, Pmw, base64
 import random as ran
-from pypinyin import lazy_pinyin
+
+# from pypinyin import lazy_pinyin
+import mypinyin
 import easygui as box
 import screenshots, subprocess
 from datetime import datetime
 from PIL import ImageGrab
-import time, geticon,ctypes
+import time, geticon, ctypes, json
 
 from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
 from ctypes import cast, POINTER
@@ -24,12 +26,14 @@ volume = cast(interface, POINTER(IAudioEndpointVolume))
 vl = volume.GetMasterVolumeLevel()
 vr = volume.GetVolumeRange()
 
+p = mypinyin.Pinyin()
+
 screenshotstatus = 0
 
 ctypes.windll.shcore.SetProcessDpiAwareness(1)
-ScaleFactor=ctypes.windll.shcore.GetScaleFactorForDevice(0)
+ScaleFactor = ctypes.windll.shcore.GetScaleFactorForDevice(0)
 
-scaleispressed=0
+scaleispressed = 0
 
 FILEPATH = os.path.dirname(os.path.realpath(sys.argv[0]))
 FILEINPATH = os.path.dirname(__file__)
@@ -42,7 +46,8 @@ btnlist = btnname = []
 user32 = ctypes.windll.user32
 user32.SetProcessDPIAware()
 scaling_factor = user32.GetDpiForSystem()
-wp= scaling_factor / 96.0
+wp = scaling_factor / 96.0
+
 
 def get_master_volume_controller():
     devices = AudioUtilities.GetSpeakers()
@@ -61,51 +66,60 @@ def set_volume_percent(volume_controller, percent):
     volume = percent / 100.0
     volume_controller.SetMasterVolumeLevelScalar(volume, None)
 
-def showvolumepercent(): 
-    global scaleispressed,volume_scale,miniwin,mute_button
-    if scaleispressed==0:
-        try:volume_scale.set(get_volume_percent(get_master_volume_controller()))
-        except:pass
-    if get_volume_percent(get_master_volume_controller())==0:
+
+def showvolumepercent():
+    global scaleispressed, volume_scale, miniwin, mute_button
+    if scaleispressed == 0:
+        try:
+            volume_scale.set(get_volume_percent(get_master_volume_controller()))
+        except:
+            pass
+    if get_volume_percent(get_master_volume_controller()) == 0:
         try:
             set_volume_percent(get_master_volume_controller(), volume_scale.get())
-            mute_button.configure(text="解除",style="CRED.TButton")
-        except:pass
+            mute_button.configure(text="解除", style="CRED.TButton")
+        except:
+            pass
     elif volume.GetMute():
         try:
-            mute_button.configure(text="解除",style="CRED.TButton")
-        except:pass
+            mute_button.configure(text="解除", style="CRED.TButton")
+        except:
+            pass
     else:
         try:
-            mute_button.configure(text="静音",style="C.TButton")
-        except:pass
-    miniwin.after(200, showvolumepercent) 
-         
+            mute_button.configure(text="静音", style="C.TButton")
+        except:
+            pass
+    miniwin.after(50, showvolumepercent)
+
 
 def adjust_volume(e):
-    global sssl,miniwin
+    global sssl, miniwin
     # volume.SetMasterVolumeLevel(
     # vr[0]+ int(volume_scale.get())*(vr[1]-vr[0])/100, None)
     set_volume_percent(get_master_volume_controller(), volume_scale.get())
-    if int(volume_scale.get()) < 10:a=f'    {int(volume_scale.get())}'
-    elif int(volume_scale.get())<100:a=f'  {int(volume_scale.get())}'
-    else:a=int(volume_scale.get())
-    sssl.configure(text=f"音量\n{a}",font=("微软雅黑", 6))
+    if int(volume_scale.get()) < 10:
+        a = f"    {int(volume_scale.get())}"
+    elif int(volume_scale.get()) < 100:
+        a = f"  {int(volume_scale.get())}"
+    else:
+        a = int(volume_scale.get())
+    sssl.configure(text=f"音量\n{a}", font=("微软雅黑", 6))
     pass
 
 
 def mute_sound():
-    if get_volume_percent(get_master_volume_controller())==0:
+    if get_volume_percent(get_master_volume_controller()) == 0:
         volume_scale.set(30)
         set_volume_percent(get_master_volume_controller(), volume_scale.get())
         volume.SetMute(0, None)
-        mute_button.configure(text="静音",style="C.TButton")
+        mute_button.configure(text="静音", style="C.TButton")
     elif volume.GetMute():
         volume.SetMute(0, None)
-        mute_button.configure(text="静音",style="C.TButton")
+        mute_button.configure(text="静音", style="C.TButton")
     else:
         volume.SetMute(1, None)
-        mute_button.configure(text="解除",style="CRED.TButton")
+        mute_button.configure(text="解除", style="CRED.TButton")
     pass
 
 
@@ -132,18 +146,21 @@ def screendraw():
     try:
         subprocess.Popen(drawboard)
         time.sleep(0.6)
-    except:pass
+    except:
+        pass
     miniwin.attributes("-alpha", "0.8")
     return
 
 
 def screenshot():
-    global screenshotstatus, miniwin
+    global screenshotstatus, miniwin, config
     screenshotstatus = 1
     miniwin.attributes("-alpha", "0")
-    thread = threading.Thread(target=screenshots.screenshot())
+    if config["is_screenshotsavedir_desktop"]:
+        thread = threading.Thread(target=screenshots.screenshot())
+    else:
+        thread = threading.Thread(target=screenshots.screenshothy())
     thread.start()
-    time.sleep(0.5)
     miniwin.attributes("-alpha", "0.8")
     screenshotstatus = 0
     return
@@ -206,7 +223,7 @@ def readf():
 
 
 if 1 == 1:
-    
+
     if os.path.exists(FILEPATH + "\\theprogramisrunning") or os.path.exists(
         FILEPATH + "\\theisrunning"
     ):
@@ -270,6 +287,47 @@ if 1 == 1:
             except:
                 pass
             exit()
+
+    try:
+        with open(FILEPATH + "\\config.json", "r") as json_file:
+            config = json.load(json_file)
+            try:
+                a = config["enable_hidebtn"]
+                a = config["enable_mutebtn"]
+                a = config["enable_screenshotbtn"]
+                a = config["enable_randomstudentbtn"]
+                a = config["enable_screendrawbtn"]
+                a = config["enable_volumeadjustment"]
+                a = config["is_screenshotsavedir_desktop"]
+            except:
+                data = {
+                    "enable_hidebtn": True,
+                    "enable_mutebtn": True,
+                    "enable_screenshotbtn": True,
+                    "is_screenshotsavedir_desktop": True,
+                    "enable_randomstudentbtn": True,
+                    "enable_screendrawbtn": True,
+                    "enable_volumeadjustment": True
+                }
+                with open(FILEPATH + "\\config.json", "w") as json_file:
+                    json.dump(data, json_file)
+                with open(FILEPATH + "\\config.json", "r") as json_file:
+                    config = json.load(json_file)
+    except:
+        data = {
+            "enable_hidebtn": True,
+            "enable_mutebtn": True,
+            "enable_screenshotbtn": True,
+            "is_screenshotsavedir_desktop": True,
+            "enable_randomstudentbtn": True,
+            "enable_screendrawbtn": True,
+            "enable_volumeadjustment": True
+        }
+        with open(FILEPATH + "\\config.json", "w") as json_file:
+            json.dump(data, json_file)
+        with open(FILEPATH + "\\config.json", "r") as json_file:
+            config = json.load(json_file)
+
     if "admin" not in res:
         while True:
             ans = box.passwordbox(
@@ -639,7 +697,9 @@ class fx:
                     )
                 elif op == "排序":
                     sorted_keys = sorted(
-                        res.keys(), key=lambda x: "".join(lazy_pinyin(x))
+                        # res.keys(), key=lambda x: "".join(lazy_pinyin(x))
+                        res.keys(),
+                        key=lambda x: "".join(p.get_pinyin(x)),
                     )
                     sorted_data = {k: res[k] for k in sorted_keys}
                     res = sorted_data
@@ -690,6 +750,11 @@ class fx:
                         fx.createlog("编辑数据文件")
                         os.system(f"notepad {FILEPATH}\\.classdata")
                         renewmain()
+                elif op == "编辑配置文件":
+                    if box.ccbox("新的配置重启后生效", title="班级管理器 管理设置 编辑数据文件"):
+                        fx.createlog("编辑配置文件")
+                        os.system(f"notepad {FILEPATH}\\config.json")
+                        renewmain()
                 else:
                     main.attributes("-disabled", 0)
                     win32gui.SetForegroundWindow(main.winfo_id())
@@ -700,22 +765,23 @@ class fx:
             return ()
 
 
-def on_scale_press(event):  
+def on_scale_press(event):
     global scaleispressed
-    scaleispressed = 1  
+    scaleispressed = 1
 
 
-def on_scale_release(event):   
-    global scaleispressed, volume_scale,mute_button,volume
+def on_scale_release(event):
+    global scaleispressed, volume_scale, mute_button, volume
     scaleispressed = 0
     if volume.GetMute():
-        mute_button.configure(text="解除",style='CRED.TButton')
+        mute_button.configure(text="解除", style="CRED.TButton")
     else:
-        mute_button.configure(text="静音",style='C1.TButton')
+        mute_button.configure(text="静音", style="C1.TButton")
+
 
 def miniman():
-    global miniwin, volume_scale, mute_button, sssl,screenshot_button, randomstudent_button, toolframe, hidebtn, screenshotstatus, main, toolstate
-    '''if os.path.exists(FILEPATH + "\\theisrunning"):
+    global miniwin, volume_scale, mute_button, sssl, screenshot_button, randomstudent_button, toolframe, hidebtn, screenshotstatus, main, toolstate, config
+    """if os.path.exists(FILEPATH + "\\theisrunning"):
         if not box.ynbox(
             "已有一个程序正在运行，是否继续？", title="双师授课助手 运行向导"
         ):
@@ -726,7 +792,7 @@ def miniman():
         f.close()
         win32api.SetFileAttributes(
             FILEPATH + "\\theisrunning", win32con.FILE_ATTRIBUTE_HIDDEN
-        )'''
+        )"""
     fx.createlog(f"打开双师授课助手")
     toolstate = 1
     miniwin = Toplevel()
@@ -748,10 +814,12 @@ def miniman():
             main.attributes("-alpha", "0.9")
 
     miniwin.protocol("WM_DELETE_WINDOW", destroy_miniwin)
+
     hidebtn = ttk.Button(
         miniwin, width=4, text="隐藏", style="C.TButton", command=showtool
     )
-    hidebtn.pack(side=LEFT)
+    if config["enable_hidebtn"]:
+        hidebtn.pack(side=LEFT)
 
     toolframe = ttk.Frame(miniwin)
     toolframe.pack(side=LEFT)
@@ -760,55 +828,63 @@ def miniman():
         toolframe, width=4, text="静音", style="C.TButton", command=mute_sound
     )
     if volume.GetMute():
-        mute_button.configure(text="解除",style='CRED.TButton')
+        mute_button.configure(text="解除", style="CRED.TButton")
     else:
-        mute_button.configure(text="静音",style='C1.TButton')
-    mute_button.pack(side=LEFT)
+        mute_button.configure(text="静音", style="C1.TButton")
+    if config["enable_mutebtn"]:
+        mute_button.pack(side=LEFT)
 
     screenshot_button = ttk.Button(
         toolframe, width=4, text="截图", style="C.TButton", command=screenshot
     )
-    screenshot_button.pack(side=LEFT)
+    if config["enable_screenshotbtn"]:
+        screenshot_button.pack(side=LEFT)
 
     randomstudent_button = ttk.Button(
         toolframe, width=4, text="抽奖", style="C.TButton", command=randomstudent
     )
-    randomstudent_button.pack(side=LEFT)
+    if config["enable_randomstudentbtn"]:
+        randomstudent_button.pack(side=LEFT)
 
     drawbtn = ttk.Button(
         toolframe, width=4, text="批注", style="C.TButton", command=screendraw
     )
-    if os.path.exists(drawboard):
+    if os.path.exists(drawboard) and config["enable_screendrawbtn"]:
         drawbtn.pack(side=LEFT)
 
-    sssl=ttk.Label(toolframe, text="音量\n调整", font=("微软雅黑", 4))
-    sssl.pack(side=LEFT)
-    ttk.Label(toolframe, text="-", font=("微软雅黑", 10)).pack(side=LEFT)
+    sssl = ttk.Label(toolframe, text="音量\n调整", font=("微软雅黑", 4))
+    if config["enable_volumeadjustment"]:
+        sssl.pack(side=LEFT)
+        ttk.Label(toolframe, text="-", font=("微软雅黑", 10)).pack(side=LEFT)
     volume_scale = ttk.Scale(
         toolframe,
         from_=0,
         to=100,
-        length=int(round(67*wp,0)),
+        length=int(round(67 * wp, 0)),
         orient="horizontal",
         command=adjust_volume,
     )
-    volume_scale.pack(side=LEFT)
+    if config["enable_volumeadjustment"]:
+        volume_scale.pack(side=LEFT)
     volume_scale.set(get_volume_percent(get_master_volume_controller()))
-    ttk.Label(toolframe, text="+", font=("微软雅黑", 10)).pack(side=LEFT)
-    volume_scale.bind("<ButtonPress-1>", on_scale_press)  
-    volume_scale.bind("<ButtonRelease-1>", on_scale_release)  
+    if config["enable_volumeadjustment"]:
+        ttk.Label(toolframe, text="+", font=("微软雅黑", 10)).pack(side=LEFT)
+    volume_scale.bind("<ButtonPress-1>", on_scale_press)
+    volume_scale.bind("<ButtonRelease-1>", on_scale_release)
 
     # closebtn= ttk.Button(toolframe,width=4,text="关闭",style='C.TButton', command=destroy_miniwin)
     # closebtn.pack(side=LEFT)
     main.attributes("-alpha", "0")
 
-    miniwin.after(0, showvolumepercent) 
+    # setvoice=threading(target=showvolumepercent())
+    # setvoice.start()
+    miniwin.after(100, showvolumepercent)
     miniwin.mainloop()
 
 
 main = Tk()
 
-main.tk.call('tk', 'scaling', ScaleFactor/80)
+main.tk.call("tk", "scaling", ScaleFactor / 80)
 
 main.title("班级管理器")
 icon = open("gui_icon.ico", "wb+")
@@ -825,8 +901,8 @@ ppm3_tips = Pmw.Balloon(main)
 s1 = s2 = ttk.Style()
 s1.configure("A.TButton", font=("微软雅黑", 12))
 s2.configure("B.TButton", font=("微软雅黑", 13))
-s2.configure("C.TButton", font=("微软雅黑", 9),foreground='black')
-s2.configure("CRED.TButton", font=("微软雅黑", 9),foreground='red')
+s2.configure("C.TButton", font=("微软雅黑", 9), foreground="black")
+s2.configure("CRED.TButton", font=("微软雅黑", 9), foreground="red")
 
 leftFrame = ttk.Frame(main)
 bottomFrame = ttk.Frame(leftFrame)
@@ -836,7 +912,7 @@ canvasframe = ttk.Frame(leftFrame)
 canvas = Canvas(canvasframe, borderwidth=0)
 frame = ttk.Frame(canvas)
 vsb = ttk.Scrollbar(canvasframe, orient="vertical", command=canvas.yview)
-canvas.configure(yscrollcommand=vsb.set,width=6*80*6)
+canvas.configure(yscrollcommand=vsb.set, width=6 * 80 * 6)
 frame_window = canvas.create_window((0, 0), window=frame, anchor="nw")
 
 vsb.pack(side=RIGHT, fill=Y)
@@ -881,7 +957,8 @@ btn1.pack(side=LEFT)
 btn2.pack(side=LEFT)
 btn3.pack(side=LEFT)
 btn4.pack(side=LEFT)
-btn5.pack(side=LEFT)
+if config["enable_mutebtn"] or config["enable_screenshotbtn"] or config["enable_randomstudentbtn"] or config["enable_screendrawbtn"] or config["enable_volumeadjustment"]:
+    btn5.pack(side=LEFT)
 txtAr.pack(side=RIGHT, fill=BOTH)
 
 leftFrame.pack(side=LEFT, expand=True, fill=BOTH)
