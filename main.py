@@ -79,7 +79,7 @@ def init_audio_meter():
 def check_audio_state():
     try:
         if meter:
-            return meter.GetPeakValue() > 0.01
+            return meter.GetPeakValue() > 0
         return False
     except:
         return False
@@ -116,7 +116,7 @@ def toggle_media_control():
                 win.activate()
                 pyautogui.press('space')
         except Exception as e:
-            print("控制媒体窗口失败:", e)
+            print(e)
     else:
         pyautogui.press('playpause')
 
@@ -2317,7 +2317,7 @@ def showab():
 
     ttk.Label(abframe, text="班级管理器", style="Title.TLabel").pack(pady=30)
 
-    ttk.Label(abframe, text="v2.1a\n大赛抢先版", style="Label.TLabel").pack(pady=5)
+    ttk.Label(abframe, text="v2.1a", style="Label.TLabel").pack(pady=5)
     linkl = ttk.Label(abframe,
                       text="项目主页",
                       cursor="hand2", style="Link.TLabel")

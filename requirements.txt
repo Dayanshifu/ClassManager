@@ -1,0 +1,10 @@
+pywin32
+Pillow
+easygui
+pycaw
+pypinyin
+opencv-python
+Pmw
+chardet
+nuitka
+xpinyin
