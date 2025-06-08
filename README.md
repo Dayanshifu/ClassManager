@@ -5,13 +5,11 @@
 ### 你说得对，但是班级管家集成了白板、随机点名、积分系统、双师班授课辅助，甚至还有linux版本，适配各种白板，电脑，哪怕有冰点还原，装到有u盘里也能用
 
 
-## V2.0.3.1419526 wa
- 
+## V2.1.0.1
+
  - 支持通过修改配置文件(config.json)设置授课助手的功能是否显示
- - 增加nuitka打包
+ - 增加了一些功能
  - 调整屏幕截图功能的时间间隔
- - 更改为使用xpinyin排序(linux只能用xpinyin，现在windows做的时候好像又不行了，于是windows用pypinyin，linux 用xpinyin)
- - [linux版和定制版](https://github.com/)
 
 ## 配置文件功能说明
 
@@ -28,7 +26,7 @@
     "capture_num": 0,
     "enable_volumeadjustment": true   
 }
-``` 
+```
  - enable_lhidebtn/enable_rhidebtn:是否在授课助手中显示左/右”隐藏/显示“按钮
  - enable_mutebtn:是否在授课助手中显示”静音/解除“按钮        
  - enable_screenshotbtn:是否在授课助手中显示”截图“按钮
